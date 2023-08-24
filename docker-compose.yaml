@@ -1,5 +1,23 @@
 version: "3.7"
 
+x-container: &base-config
+  build:
+    context: ./
+    dockerfile: docker/Dockerfile
+    args:
+        - USER_NAME=${USER_NAME}
+        - GROUP_NAME=${GROUP_NAME}
+        - UID=${UID}
+        - GID=${GID}
+  user: "${UID}:${GID}"
+  tty: true
+  env_file:
+      - .env
+
+volumes:
+  robot.db.volume:
+    name: robot.db.volume
+
 services:
   nginx:
     image: nginx
@@ -12,14 +30,34 @@ services:
     depends_on:
         - backend
 
+  db:
+    image: postgres:15.4
+    container_name: robot.db
+    ports:
+        - "5433:5432"
+    env_file:
+        - .env
+    volumes:
+        - robot.db.volume:/var/lib/postgresql/data
+
   backend:
-    build:
-      context: ./
-      dockerfile: docker/Dockerfile.backend
+    <<: *base-config
     container_name: robot.backend
     expose:
         - "8000"
     volumes:
         - ./backend:/app
         - ./uwsgi:/etc/uwsgi
+    command: ["uwsgi", "--ini", "/etc/uwsgi/uwsgi.ini"]
+    depends_on:
+        - db
+
+  frontend:
+    <<: *base-config
+    container_name: robot.frontend
+    ports:
+        - "3000:3000"
+    volumes:
+        - ./frontend:/app
+    command: ["/bin/bash", "-c", "npm run serve -- --port 3000"]
 
