@@ -9,14 +9,22 @@ x-container: &base-config
         - GROUP_NAME=${GROUP_NAME}
         - UID=${UID}
         - GID=${GID}
+  image: vue-ros-interface:latest
   user: "${UID}:${GID}"
   tty: true
   env_file:
       - .env
 
 volumes:
-  robot.db.volume:
-    name: robot.db.volume
+  robot_db:
+    driver_opts:
+      type: none
+      device: ./postgres/robot_db
+      o: bind
+
+networks:
+  robot_net:
+    driver: bridge
 
 services:
   nginx:
@@ -25,8 +33,11 @@ services:
     ports:
         - "8000:8000"
     volumes:
-        - ./nginx/conf:/etc/nginx/conf.d
+        - ./nginx/robot_nginx.conf:/etc/nginx/conf.d/robot_nginx.conf
         - ./nginx/uwsgi_params:/etc/nginx/uwsgi_params
+        - ./nginx/log:/var/log/nginx
+    networks:
+        - robot_net
     depends_on:
         - backend
 
@@ -38,17 +49,22 @@ services:
     env_file:
         - .env
     volumes:
-        - robot.db.volume:/var/lib/postgresql/data
+        - ./postgres/robot_db:/var/lib/postgresql/data
+    hostname: postgres
+    networks:
+        - robot_net
 
   backend:
     <<: *base-config
     container_name: robot.backend
     expose:
-        - "8000"
+        - "8080"
     volumes:
         - ./backend:/app
-        - ./uwsgi:/etc/uwsgi
-    command: ["uwsgi", "--ini", "/etc/uwsgi/uwsgi.ini"]
+        - ./uwsgi:/uwsgi
+    command: ["uwsgi", "--ini", "/uwsgi/uwsgi.ini"]
+    networks:
+        - robot_net
     depends_on:
         - db
 
@@ -59,5 +75,7 @@ services:
         - "3000:3000"
     volumes:
         - ./frontend:/app
-    command: ["/bin/bash", "-c", "npm run serve -- --port 3000"]
+    command: ["/bin/bash", "-c", "npm run --prefix robot_ui serve -- --port 3000"]
+    networks:
+        - robot_net
 

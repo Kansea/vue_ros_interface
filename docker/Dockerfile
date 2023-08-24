@@ -10,7 +10,7 @@ ENV TZ=Asia/Tokyo
 # System configure and install tools
 ###################################################################
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    software-properties-common locales sudo tzdata \
+    software-properties-common locales sudo tzdata libpq-dev \
     build-essential curl wget vim cmake python3-dev python3-pip \
     && locale-gen ja_JP ja_JP.UTF-8 \
     && update-locale LC_ALL=ja_JP.UTF-8 LANG=ja_JP.UTF-8 \
@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install Django
 ###################################################################
 RUN pip3 install django uwsgi django-rest-framework django-cors-headers \
-    django-webpack-loader djoser rospkg
+    django-webpack-loader djoser psycopg2 rospkg
 
 
 ###################################################################
