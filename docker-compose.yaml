@@ -1,5 +1,16 @@
 version: "3.7"
 
+volumes:
+  robot_db:
+    driver_opts:
+      type: none
+      device: ./postgres/robot_db
+      o: bind
+
+networks:
+  robot_net:
+    driver: bridge
+
 x-container: &base-config
   build:
     context: ./
@@ -14,17 +25,8 @@ x-container: &base-config
   tty: true
   env_file:
       - .env
-
-volumes:
-  robot_db:
-    driver_opts:
-      type: none
-      device: ./postgres/robot_db
-      o: bind
-
-networks:
-  robot_net:
-    driver: bridge
+  networks:
+      - robot_net
 
 services:
   nginx:
@@ -32,50 +34,52 @@ services:
     container_name: robot.nginx
     ports:
         - "8000:8000"
-    volumes:
-        - ./nginx/robot_nginx.conf:/etc/nginx/conf.d/robot_nginx.conf
-        - ./nginx/uwsgi_params:/etc/nginx/uwsgi_params
-        - ./nginx/log:/var/log/nginx
     networks:
         - robot_net
     depends_on:
         - backend
+    volumes:
+        - ./nginx/robot_nginx.conf:/etc/nginx/conf.d/robot_nginx.conf
+        - ./nginx/uwsgi_params:/etc/nginx/uwsgi_params
+        - ./nginx/log:/var/log/nginx
+        - ./backend/robot_site/static:/static
+        - ./frontend/robot_ui:/frontend
 
   db:
     image: postgres:15.4
     container_name: robot.db
-    ports:
-        - "5433:5432"
     env_file:
         - .env
-    volumes:
-        - ./postgres/robot_db:/var/lib/postgresql/data
     hostname: postgres
     networks:
         - robot_net
+    expose:
+        - "5432"
+    volumes:
+        - ./postgres/robot_db:/var/lib/postgresql/data
 
   backend:
     <<: *base-config
     container_name: robot.backend
     expose:
         - "8080"
-    volumes:
-        - ./backend:/app
-        - ./uwsgi:/uwsgi
-    command: ["uwsgi", "--ini", "/uwsgi/uwsgi.ini"]
-    networks:
-        - robot_net
     depends_on:
         - db
+    volumes:
+        - ./backend/robot_site:/app
+        - ./uwsgi:/uwsgi
+    command: ["uwsgi", "--ini", "/uwsgi/uwsgi.ini"]
 
   frontend:
     <<: *base-config
     container_name: robot.frontend
     ports:
-        - "3000:3000"
+        - "8001:3000"
+    depends_on:
+        - backend
     volumes:
-        - ./frontend:/app
-    command: ["/bin/bash", "-c", "npm run --prefix robot_ui serve -- --port 3000"]
-    networks:
-        - robot_net
+        - ./frontend/robot_ui:/app
+        - ./backend/robot_site/static:/static
+    # command: ["/bin/bash", "-c", "npm run build"] # for build
+    command: ["/bin/bash", "-c", "npm run serve -- --port 3000"] # for developing
 
