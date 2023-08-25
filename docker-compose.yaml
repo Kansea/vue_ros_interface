@@ -1,25 +1,85 @@
 version: "3.7"
 
+volumes:
+  robot_db:
+    driver_opts:
+      type: none
+      device: ./postgres/robot_db
+      o: bind
+
+networks:
+  robot_net:
+    driver: bridge
+
+x-container: &base-config
+  build:
+    context: ./
+    dockerfile: docker/Dockerfile
+    args:
+        - USER_NAME=${USER_NAME}
+        - GROUP_NAME=${GROUP_NAME}
+        - UID=${UID}
+        - GID=${GID}
+  image: vue-ros-interface:latest
+  user: "${UID}:${GID}"
+  tty: true
+  env_file:
+      - .env
+  networks:
+      - robot_net
+
 services:
   nginx:
     image: nginx
     container_name: robot.nginx
     ports:
         - "8000:8000"
-    volumes:
-        - ./nginx/conf:/etc/nginx/conf.d
-        - ./nginx/uwsgi_params:/etc/nginx/uwsgi_params
+    networks:
+        - robot_net
     depends_on:
         - backend
+    volumes:
+        - ./nginx/robot_nginx.conf:/etc/nginx/conf.d/robot_nginx.conf
+        - ./nginx/uwsgi_params:/etc/nginx/uwsgi_params
+        - ./nginx/log:/var/log/nginx
+        - ./backend/robot_site/static:/static
+        - ./frontend/robot_ui:/frontend
+
+  db:
+    image: postgres:15.4
+    container_name: robot.db
+    env_file:
+        - .env
+    hostname: postgres
+    networks:
+        - robot_net
+    expose:
+        - "5432"
+    volumes:
+        - ./postgres/robot_db:/var/lib/postgresql/data
 
   backend:
-    build:
-      context: ./
-      dockerfile: docker/Dockerfile.backend
+    <<: *base-config
     container_name: robot.backend
     expose:
-        - "8000"
+        - "8080"
+    depends_on:
+        - db
     volumes:
-        - ./backend:/app
-        - ./uwsgi:/etc/uwsgi
+        - ./backend/robot_site:/app
+        - ./uwsgi:/uwsgi
+    command: ["uwsgi", "--ini", "/uwsgi/uwsgi.ini"]
+
+  frontend:
+    <<: *base-config
+    container_name: robot.frontend
+    ports:
+        - "8001:3000"
+    depends_on:
+        - backend
+    volumes:
+        - ./frontend/robot_ui:/app
+        - ./backend/robot_site/static:/static
+    # command: ["/bin/bash", "-c", "npm run build"] # for build
+    command: ["/bin/bash", "-c", "npm run serve -- --port 3000"] # for developing
 
