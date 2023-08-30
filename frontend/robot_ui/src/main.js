@@ -1,4 +1,9 @@
+import axios from 'axios'
+import VueAxios from 'vue-axios'
 import { createApp } from 'vue'
-import App from './App.vue'
+import RobotApp from './Robot.vue'
 
-createApp(App).mount('#app')
+
+const app = createApp(RobotApp)
+app.use(VueAxios, axios)
+app.mount('#app')

@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y nodejs
 ###################################################################
 # Install VUE
 ###################################################################
-RUN npm install -g @vue/cli
+RUN npm install -g @vue/cli axios --save vue-axios
 
 
 ###################################################################
