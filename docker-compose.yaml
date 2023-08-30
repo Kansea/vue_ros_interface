@@ -81,6 +81,6 @@ services:
     volumes:
         - ./frontend/robot_ui:/app
         - ./backend/robot_site/static:/static
-    # command: ["/bin/bash", "-c", "npm run build"] # for build
-    command: ["/bin/bash", "-c", "npm run serve -- --port 3000"] # for developing
+    command: ["/bin/bash", "-c", "npm run build"] # for build
+    # command: ["/bin/bash", "-c", "npm run serve -- --port 3000"] # for developing
 

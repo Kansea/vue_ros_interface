@@ -22,8 +22,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ###################################################################
 # Install Django
 ###################################################################
-RUN pip3 install django uwsgi django-rest-framework django-cors-headers \
-    django-webpack-loader djoser psycopg2 rospkg
+RUN pip3 install django uwsgi djoser psycopg2 rospkg \
+    django-rest-framework django-cors-headers \
+    django-webpack-loader channels["daphne"]
 
 
 ###################################################################
