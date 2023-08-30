@@ -1,22 +1,26 @@
 <template>
   <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <HelloRobot msg="Welcome to Robot Web App Framework"/>
+  <RosServiceCall/>
+
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import HelloRobot from './components/HelloRobot.vue'
+import RosServiceCall from './components/RosServiceCall.vue'
 
 export default {
-  name: 'App',
+  name: 'RobotApp',
   components: {
-    HelloWorld
+    HelloRobot,
+    RosServiceCall,
   }
 }
 </script>
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  font-family: Helvetica, Arial;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
