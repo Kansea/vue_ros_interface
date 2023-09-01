@@ -31,23 +31,24 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    # Add by Lin
+    'daphne',
+    'corsheaders',
+    'rest_framework',
+    'robot_api',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Add by Lin
-    'robot_api',
-    'corsheaders',
-    'rest_framework',
 ]
 
 # CORS setting
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = ['http://127.0.0.1:3000', 'http://127.0.0.1:8000']
 CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:3000', 'http://127.0.0.1:8000']
-CSRF_COOKIE_DOMAIN = 'http://127.0.0.1:300'
+# CSRF_COOKIE_DOMAIN = 'http://127.0.0.1:3000'
 CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = False
 
@@ -81,6 +82,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'robot_site.wsgi.application'
+ASGI_APPLICATION = 'robot_site.asgi.application'
 
 
 # Database
