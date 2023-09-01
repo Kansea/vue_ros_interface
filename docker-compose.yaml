@@ -84,3 +84,22 @@ services:
     command: ["/bin/bash", "-c", "npm run build"] # for build
     # command: ["/bin/bash", "-c", "npm run serve -- --port 3000"] # for developing
 
+  rosbridge:
+    build:
+      context: ./
+      dockerfile: docker/Dockerfile.rosbridge
+      args:
+          - USER_NAME=${USER_NAME}
+          - GROUP_NAME=${GROUP_NAME}
+          - UID=${UID}
+          - GID=${GID}
+    image: rosbridge:latest
+    user: "${UID}:${GID}"
+    ports:
+        - "9090:9090"
+    tty: true
+    env_file:
+        - .env
+    networks:
+        - robot_net
+
