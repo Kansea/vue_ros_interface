@@ -62,14 +62,18 @@ services:
   backend:
     <<: *base-config
     container_name: robot.backend
-    expose:
-        - "8080"
+    # expose:
+    #     - "8080"
+    ports:
+        - 8080:8080
     depends_on:
         - db
     volumes:
         - ./backend/robot_site:/app
-        - ./uwsgi:/uwsgi
-    command: ["uwsgi", "--ini", "/uwsgi/uwsgi.ini"]
+        # - ./uwsgi:/uwsgi
+    # command: ["uwsgi", "--ini", "/uwsgi/uwsgi.ini"]
+    # command: ["daphne", "robot_site.asgi:application"]
+    command: ["python3", "manage.py", "runserver", "8080"]
 
   frontend:
     <<: *base-config
@@ -94,6 +98,7 @@ services:
           - UID=${UID}
           - GID=${GID}
     image: rosbridge:latest
+    container_name: robot.bridge
     user: "${UID}:${GID}"
     ports:
         - "9090:9090"
