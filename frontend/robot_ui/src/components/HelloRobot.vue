@@ -1,8 +1,6 @@
 <template>
   <div class="robot">
     <h1>{{ msg }}</h1>
-
-    <span>Message: {{ msg }}</span>
   </div>
 </template>
 

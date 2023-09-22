@@ -26,24 +26,24 @@ export default {
 
   setup() {
 
-    const csrf_token = ref('')
+    // const csrf_token = ref('')
     const res = ref('')
     const a = ref('')
     const b = ref('')
 
     function Servicecall() {
-      axios
-        .get('/get_token')
-        .then((response) => {
-          if (response.status === 200) {
-            csrf_token.value = response.data.token
-            axios.defaults.headers.common['Authorization'] = 'Bearer ${csrf_token.value}'
-          }
-        })
-        .catch((error) => {
-          console.log(error)
-        })
-        .finally(() => {})
+      // axios
+      //   .get('/get_token')
+      //   .then((response) => {
+      //     if (response.status === 200) {
+      //       csrf_token.value = response.data.token
+      //       axios.defaults.headers.common['Authorization'] = 'Bearer ${csrf_token.value}'
+      //     }
+      //   })
+      //   .catch((error) => {
+      //     console.log(error)
+      //   })
+      //   .finally(() => {})
 
       axios
         .post('/add', {

@@ -7,10 +7,6 @@ volumes:
       device: ./postgres/robot_db
       o: bind
 
-networks:
-  robot_net:
-    driver: bridge
-
 x-container: &base-config
   build:
     context: ./
@@ -25,8 +21,6 @@ x-container: &base-config
   tty: true
   env_file:
       - .env
-  networks:
-      - robot_net
 
 services:
   nginx:
@@ -34,8 +28,7 @@ services:
     container_name: robot.nginx
     ports:
         - "8000:80"
-    networks:
-        - robot_net
+    network_mode: robot_net
     depends_on:
         - backend
     volumes:
@@ -46,38 +39,47 @@ services:
         - ./frontend/robot_ui:/frontend
     command: ["nginx", "-g", "daemon off;"]
 
+  redis:
+    image: redis:7
+    container_name: robot.redis
+    network_mode: robot_net
+    expose:
+        - 6379
+    env_file:
+        - .env
+
   db:
     image: postgres:15.4
     container_name: robot.db
     env_file:
         - .env
     hostname: postgres
-    networks:
-        - robot_net
+    network_mode: robot_net
     expose:
-        - "5432"
+        - 5432
     volumes:
         - ./postgres/robot_db:/var/lib/postgresql/data
 
   backend:
     <<: *base-config
     container_name: robot.backend
-    # expose:
-    #     - "8080"
+    network_mode: robot_net
     ports:
-        - 8080:8080
+      - 8080:8080
     depends_on:
+        - redis
         - db
     volumes:
         - ./backend/robot_site:/app
-        # - ./uwsgi:/uwsgi
-    # command: ["uwsgi", "--ini", "/uwsgi/uwsgi.ini"]
-    # command: ["daphne", "robot_site.asgi:application"]
-    command: ["python3", "manage.py", "runserver", "8080"]
+        # - ./backend/test_site/mysite:/app
+    # command: ["daphne", "-p 8080", "robot_site.asgi:application"]
+    command: ["python3", "manage.py", "runserver", "0.0.0.0:8080"]
+    # command: ["su", "-", "${USER_NAME}"]
 
   frontend:
     <<: *base-config
     container_name: robot.frontend
+    network_mode: robot_net
     ports:
         - "3000:3000"
     depends_on:
@@ -85,7 +87,7 @@ services:
     volumes:
         - ./frontend/robot_ui:/app
         - ./backend/robot_site/static:/static
-    command: ["/bin/bash", "-c", "npm run build"] # for build
+    command: ["/bin/bash", "-c", "npm run -s build"] # for build
     # command: ["/bin/bash", "-c", "npm run serve -- --port 3000"] # for developing
 
   rosbridge:
@@ -100,11 +102,10 @@ services:
     image: rosbridge:latest
     container_name: robot.bridge
     user: "${UID}:${GID}"
+    network_mode: robot_net
     ports:
         - "9090:9090"
     tty: true
     env_file:
         - .env
-    networks:
-        - robot_net
 
