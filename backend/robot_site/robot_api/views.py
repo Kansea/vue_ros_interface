@@ -4,6 +4,7 @@ from django.http import HttpResponse, JsonResponse
 import json
 from robot_api.models import Add
 from django.views.decorators.csrf import csrf_exempt
+from robot_api.consumers import ApiConsumer
 
 # Create your views here.
 
@@ -22,7 +23,10 @@ def calculate_add(request):
 
         _a = data["a"]
         _b = data["b"]
-        _res = float(_a) + float(_b)
+
+        # TODO: call consumers api function here.
+        # _res = float(_a) + float(_b)
+        _res = ApiConsumer.ws_add(a=_a, b=_b)
 
         new_data = Add(a=_a, b=_b, result=_res)
         new_data.save()
